@@ -4,9 +4,6 @@
   "InternalName": "Habitat",
   "Punchline": "The Habitat Nightclub Plugin",
   "Description": "A little fun companion plugin for Habitat Nightclub",
-  "RepoUrl": "https://github.com/thescarini/Habitat",
-  "DownloadLinkInstall": "https://github.com/thescarini/Habitat/releases/download/0.2.0.0/latest.zip",
-  "DownloadLinkUpdate": "https://github.com/thescarini/Habitat/releases/download/0.2.0.0/latest.zip",
   "AssemblyVersion": "0.2.0.0",
   "ApplicableVersion": "any",
   "Tags": [
