@@ -31,7 +31,9 @@ public class MainWindow : Window, IDisposable
         SizeConstraints = new WindowSizeConstraints
         {
             MinimumSize = new Vector2(600, 450),
-            MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
+            MaximumSize = new Vector2(600, 450)
+                //MathF.Min (ImGui.GetMainViewport().Size.X * 0.9f, 1600f),
+                //MathF.Min (ImGui.GetMainViewport().Size.Y * 0.9f, 1000f))
         };
 
         this.TitleBarButtons = new List<TitleBarButton>
@@ -122,23 +124,6 @@ public class MainWindow : Window, IDisposable
             {
                 var member = staff[i];
                 ImGui.TableNextRow();
-                ImGui.TableSetColumnIndex(1);
-                //ImGui.Selectable($"##row{i}", false, ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap);
-                bool isHovered = ImGui.IsItemHovered();
-                if (isHovered)
-                {
-                    //uint color = ImGui.GetColorU32(new Vector4(0.3f, 0.3f, 0.6f, 0.4f));
-                    //ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, color);
-                    if (member.Status)
-                    {
-                        ImGui.SetTooltip($"target {member.Character_name}");
-                        bool isClicked = ImGui.IsItemClicked();
-                        if (isClicked)
-                        {
-                            Log.Information($"{Plugin.PluginInterface.Manifest.Name} try target player {member.Character_name}");
-                        }
-                    }
-                }
                 ImGui.TableSetColumnIndex(0);
                 ImGui.AlignTextToFramePadding();
                 ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new System.Numerics.Vector2(0, 0));
@@ -218,7 +203,7 @@ public class MainWindow : Window, IDisposable
     private static bool Dropdown(string label, string[] items, ref int selected)
     {
         bool changed = false;
-        ImGui.SetNextItemWidth(150f);
+        ImGui.SetNextItemWidth(150f * (ImGui.GetIO().FontGlobalScale));
         if (ImGui.BeginCombo(label, items[selected]))
         {
             for (int i = 0; i < items.Length; i++)
@@ -250,15 +235,17 @@ public class MainWindow : Window, IDisposable
 
     public override void Draw()
     {
-        var footerHeight = 30f;
         var availableWindowsize = ImGui.GetContentRegionAvail();
-        ImGui.BeginChild("MainWindow", new Vector2(0, availableWindowsize.Y - footerHeight), false, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+        float scale = ImGui.GetIO().FontGlobalScale;
+        var footerHeight = 30f * scale;
+
+        ImGui.BeginChild("MainWindow", new Vector2(0, -footerHeight), false, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
         // --- Header ---
         var habitatLogo = Plugin.TextureProvider.GetFromFile(habitatLogoPath).GetWrapOrDefault();
         if (habitatLogo != null)
         {
-            ImGui.Image(habitatLogo.Handle, habitatLogo.Size / 7.0f);
+            ImGui.Image(habitatLogo.Handle, habitatLogo.Size / 7.0f * scale);
         }
         
         ImGui.AlignTextToFramePadding();
@@ -274,7 +261,7 @@ public class MainWindow : Window, IDisposable
             ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), "(not VIP)");
         }
         ImGui.SameLine();
-        RightAlignedText("Climate Change",50f);
+        RightAlignedText("Climate Change",50f * scale);
         ImGui.SameLine();
         if (ImGuiComponents.ToggleButton("ClimateChangeButton", ref climateChange))
         {
@@ -289,7 +276,7 @@ public class MainWindow : Window, IDisposable
             {
                 if (ImGui.BeginTable("HabitatTable", 2))
                 {
-                    ImGui.TableSetupColumn("Sidebar", ImGuiTableColumnFlags.WidthFixed, 110f);
+                    ImGui.TableSetupColumn("Sidebar", ImGuiTableColumnFlags.WidthFixed, 110f * scale);
                     ImGui.TableSetupColumn("Content", ImGuiTableColumnFlags.WidthStretch);
 
                     ImGui.TableNextRow();
@@ -369,7 +356,7 @@ public class MainWindow : Window, IDisposable
             {
                 if (ImGui.BeginTable("GothikaTable", 2))
                 {
-                    ImGui.TableSetupColumn("Sidebar", ImGuiTableColumnFlags.WidthFixed, 110f);
+                    ImGui.TableSetupColumn("Sidebar", ImGuiTableColumnFlags.WidthFixed, 110f * scale);
                     ImGui.TableSetupColumn("Content", ImGuiTableColumnFlags.WidthStretch);
 
                     ImGui.TableNextRow();
@@ -483,6 +470,6 @@ public class MainWindow : Window, IDisposable
             ImGui.NewLine();
         }
         ImGui.SameLine();
-        RightAlignedText("v0.3", 0);
+        RightAlignedText("v0.3.1.0", 0);
     }
 }
