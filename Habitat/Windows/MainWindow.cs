@@ -1,16 +1,13 @@
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
-using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Habitat.Models;
-using Lumina.Excel.Sheets;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Reflection.Emit;
 
 namespace Habitat.Windows;
 
@@ -30,8 +27,8 @@ public class MainWindow : Window, IDisposable
     {
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(600, 450),
-            MaximumSize = new Vector2(600, 450)
+            MinimumSize = new Vector2(650, 500),
+            MaximumSize = new Vector2(650, 500)
                 //MathF.Min (ImGui.GetMainViewport().Size.X * 0.9f, 1600f),
                 //MathF.Min (ImGui.GetMainViewport().Size.Y * 0.9f, 1000f))
         };
@@ -57,7 +54,12 @@ public class MainWindow : Window, IDisposable
 
     public void Dispose() { }
 
-    private DateTime lastCheck = DateTime.MinValue;
+    private DateTime lastCheckStaff = DateTime.MinValue;
+    private DateTime lastCheckVip = DateTime.MinValue;
+    private DateTime lastCheckStaffPlayer = DateTime.MinValue;
+    private string vipFilter = "";
+    private bool showOnlineVipsOnly = false;
+
 
     private void LinkText(string text, string url)
     {
@@ -144,12 +146,12 @@ public class MainWindow : Window, IDisposable
                 }
                 else
                 {
-                    ImGui.TextColored(new Vector4(1,0,0,1), "unavailable");
+                    ImGui.TextDisabled("unavailable");
                 }
                 ImGui.TableSetColumnIndex(3);
                 if (member.Status)
                 {
-                    if (ImGui.Button("Send a Tell"))
+                    if (ImGui.SmallButton("Send a Tell"))
                     {
                         Log.Information($"{Plugin.PluginInterface.Manifest.Name} Contact Button for {member.Character_name}@{member.World} clicked!");
                     }
@@ -161,43 +163,93 @@ public class MainWindow : Window, IDisposable
         }
     }
 
-
-    private void ListService(string type)
+    public void DrawVipTable(List<VisiblePlayer> visiblePlayers)
     {
-        var services = plugin.ServiceList.Where(s => s.Type == type).ToList();
-        if (ImGui.BeginTable(type, 3))
+        var size = ImGui.GetContentRegionAvail();
+        plugin.DataServiceVip.EnsureData();
+        if (plugin.DataServiceVip?.Data == null)
+            return;
+        var visibleLookup = new HashSet<string>(
+            visiblePlayers.Select(p => $"{p.Name}@{p.World}".ToLowerInvariant())
+        );
+        ImGui.Text("Search:");
+        ImGui.SetNextItemWidth(250 * ImGuiHelpers.GlobalScale);
+        ImGui.InputTextWithHint("##vipFilter", "Find a VIP", ref vipFilter, 100);
+        ImGui.SameLine();
+        ImGui.Checkbox("Show online only", ref showOnlineVipsOnly);
+        ImGui.Spacing();
+        if (ImGui.BeginTable("VipTable", 7,ImGuiTableFlags.ScrollY,new Vector2(0, size.Y)))
         {
-            ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthFixed);
-            ImGui.TableSetupColumn("Price", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("VIP Kind");
+            ImGui.TableSetupColumn("Name");
+            ImGui.TableSetupColumn("Contact");
+            ImGui.TableSetupColumn("Status");
+            ImGui.TableSetupColumn("World");
+            ImGui.TableSetupColumn("Discord");
+            ImGui.TableSetupColumn("VIP Since");
             ImGui.TableHeadersRow();
-            for (int i = 0; i < services.Count; i++)
+            ImGui.TableSetupScrollFreeze(0, 1);
+            var filter = vipFilter?.Trim();
+            foreach (var vip in plugin.DataServiceVip.Data)
             {
-                var service = services[i];
+                string key = $"{vip.Character_name}@{vip.World}".ToLowerInvariant();
+                bool isVisible = visibleLookup.Contains(key);
+                if (showOnlineVipsOnly && !isVisible)
+                    continue;
+                if (!string.IsNullOrEmpty(filter) &&
+                    !vip.Character_name.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                
                 ImGui.TableNextRow();
-                ImGui.TableSetColumnIndex(1);
-                ImGui.Selectable($"##row{i}", false, ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap);
-                bool isHovered = ImGui.IsItemHovered();
-                if (isHovered)
-                {
-                    uint color = ImGui.GetColorU32(new Vector4(0.3f, 0.3f, 0.6f, 0.4f));
-                    ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, color);
-                    ImGui.SetTooltip(service.Description);
-                }
                 ImGui.TableSetColumnIndex(0);
-                ImGui.Text(service.Name);
+                ImGui.TextUnformatted(vip.Vip_kind);
                 ImGui.TableSetColumnIndex(1);
-                ImGui.Text(service.Price);
+                ImGui.TextUnformatted(vip.Character_name);
+                ImGui.TableSetColumnIndex(2);
+                if (isVisible)
+                {
+                    if (ImGui.SmallButton("Contact"))
+                    {
+                        // send tell?
+                    }
+                }
+                ImGui.TableSetColumnIndex(3);
+                if (isVisible)
+                {
+                    ImGui.TextColored(new Vector4(0, 1, 0, 1), "available");
+                }
+                else
+                {
+                    ImGui.TextDisabled("unavailable");
+                }
+                ImGui.TableSetColumnIndex(4);
+                ImGui.TextUnformatted(vip.World);
+                ImGui.TableSetColumnIndex(5);
+                ImGui.TextUnformatted(vip.Discord_handle);
+                ImGui.TableSetColumnIndex(6);
+                ImGui.TextUnformatted(vip.Vip_since.ToString("yyyy-MM-dd"));
+                
             }
             ImGui.EndTable();
         }
     }
-
-    private void RightAlignedText(string text, float offset)
+        
+    private void RightAlignedText(string text, float offset = 0f)
     {
         float avail = ImGui.GetContentRegionAvail().X;
         float textWidth = ImGui.CalcTextSize(text).X;
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + avail - textWidth - offset);
         ImGui.Text(text);
+    }
+
+    private bool RightAlignedButton(string label, float offset = 0f)
+    {
+        var style = ImGui.GetStyle();
+        float avail = ImGui.GetContentRegionAvail().X;
+        float textWidth = ImGui.CalcTextSize(label).X;
+        float buttonWidth = textWidth + style.FramePadding.X * 2;
+        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + avail -  buttonWidth - offset);
+        return ImGui.Button(label);
     }
 
     private static bool Dropdown(string label, string[] items, ref int selected)
@@ -233,6 +285,16 @@ public class MainWindow : Window, IDisposable
         }
     }
 
+    private void TextfieldToClipboard(string text)
+    {
+        if (ImGui.Selectable(text))
+            ImGui.SetClipboardText(text);
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("copy to clipboard");
+    }
+
+    
+
     public override void Draw()
     {
         var availableWindowsize = ImGui.GetContentRegionAvail();
@@ -249,17 +311,7 @@ public class MainWindow : Window, IDisposable
         }
         
         ImGui.AlignTextToFramePadding();
-        ImGui.Text($"Welcome {plugin.PlayerFullName}");
-        if (plugin.IsPlayerVip(plugin.PlayerFullName))
-        {
-            ImGui.SameLine();
-            ImGui.TextColored(new Vector4(1f, 1f, 0, 1f), "(VIP)");
-        }
-        else
-        {
-            ImGui.SameLine();
-            ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), "(not VIP)");
-        }
+        ImGui.Text($"Welcome {plugin.localPlayer.Name} from {plugin.localPlayer.World}");
         ImGui.SameLine();
         RightAlignedText("Climate Change",50f * scale);
         ImGui.SameLine();
@@ -326,9 +378,9 @@ public class MainWindow : Window, IDisposable
 
                     if (habitatMenu == 1)
                     {
-                        if ((DateTime.UtcNow - lastCheck).TotalSeconds > 60)
+                        if ((DateTime.UtcNow - lastCheckStaff).TotalSeconds > 1)
                         {
-                            lastCheck = DateTime.UtcNow;
+                            lastCheckStaff = DateTime.UtcNow;
                             var visiblePlayers = plugin.GetVisiblePlayers();
                             plugin.UpdateStaffStatus(visiblePlayers);
                         }
@@ -348,7 +400,79 @@ public class MainWindow : Window, IDisposable
 
             if (ImGui.BeginTabItem("VIP Area"))
             {
-                        
+                if (ImGui.BeginTable("VIP Area",2))
+                {
+                    if ((DateTime.UtcNow - lastCheckVip).TotalSeconds > 1)
+                    {
+                        lastCheckVip = DateTime.UtcNow;
+                        plugin.UpdateLocalPlayerVip();
+                    }
+                    ImGui.TableSetupColumn("LeftSide", ImGuiTableColumnFlags.WidthFixed, 250f * scale);
+                    ImGui.TableSetupColumn("RightSide", ImGuiTableColumnFlags.WidthStretch);
+                    ImGui.TableNextRow();
+                    ImGui.TableSetColumnIndex(0);
+                    
+                    ImGui.Text("Your current VIP Status:");
+                    ImGui.SameLine();
+                    if (plugin.localPlayer.IsVip)
+                    {
+                        ImGui.TextColored(new Vector4(0, 1, 0, 1), plugin.localPlayer.VipKind);
+                    }
+                    else
+                    {
+                        ImGui.TextColored(new Vector4(1, 0, 0, 1), "no VIP");
+                    }
+                    ImGui.Spacing();
+                    if (ImGui.Button("Upgrade VIP Status"))
+                    {
+                        Log.Information($"{Plugin.PluginInterface.Manifest.Name} Upgrade VIP Status clicked!");
+                    }
+                    if (plugin.localPlayer.VipKind == "Lifetime VIP" || plugin.localPlayer.VipKind == "Booster VIP")
+                    {
+                        ImGui.NewLine();
+                        ImGui.Text("VIP Syncshell");
+                        ImGui.Spacing();
+                        ImGui.Text("Lightless Syncshell ID:");
+                        TextfieldToClipboard("feetsniffa");
+                        ImGui.Spacing();
+                        ImGui.Text("Lightless Syncshell Password:");
+                        TextfieldToClipboard("sniffinggoodfeet!");
+                        ImGui.NewLine();
+                        ImGui.TextColoredWrapped(new Vector4(1, 0, 0, 1), "Habitat is not responsible for any issues that may occur while using the Syncshell.");
+                    }
+                    ImGui.NewLine();
+                    if (ImGui.Button("Request VIP Host"))
+                    {
+                        Log.Information($"{Plugin.PluginInterface.Manifest.Name} VIP Host requested");
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Button("Order a Drink"))
+                    {
+                        Log.Information($"{Plugin.PluginInterface.Manifest.Name} VIP Order a Drink");
+                    }
+                    ImGui.TableSetColumnIndex(1);
+                    ImGui.BeginChild("ContentScoll", new System.Numerics.Vector2(0, 0), false);
+                    ImGui.Text("Active VIP Perks: (not working yet)");
+                    ImGui.Spacing();
+
+                    ImGui.BulletText("Access to Ocean's Edge");
+                    ImGui.BulletText("Access to the Second Floor Reserved Area");
+                    ImGui.BulletText("VIP Area Drink Service (Maid/Butler Services)");
+                    ImGui.BulletText("VIP Area Dedicated Hosts");
+                    ImGui.BulletText("VIP CWLS and Syncshell");
+                    ImGui.BulletText("Server VIP Role");
+                    ImGui.BulletText("Server Lifetime VIP Role");
+                    ImGui.BulletText("5 Free Drinks per Night (Habitat Classics)");
+                    ImGui.BulletText("1 Free Redeemable Scratchcard per Night");
+                    ImGui.BulletText("Line Skip (When the Venue is Capped)");
+                    ImGui.BulletText("Priority Queue for Photography Commissions");
+                    ImGui.BulletText("Buy 20 Scratchcards Get 2 Bonus Scratchcards");
+                    ImGui.BulletText("Ripple Shots Limit Increased From 20 To 30");
+                    ImGui.BulletText("Raffle Tickets Limit Increased From 40 To 50");
+                    ImGui.BulletText("Chance to unlock a Private Chamber for the full night (Up to 6 Guests)");
+                    ImGui.EndChild();
+                    ImGui.EndTable();
+                }
                 ImGui.EndTabItem();
             }
 
@@ -405,9 +529,9 @@ public class MainWindow : Window, IDisposable
 
                     if (gothikaMenu == 1)
                     {
-                        if ((DateTime.UtcNow - lastCheck).TotalSeconds > 60)
+                        if ((DateTime.UtcNow - lastCheckStaff).TotalSeconds > 1)
                         {
-                            lastCheck = DateTime.UtcNow;
+                            lastCheckStaff = DateTime.UtcNow;
                             var visiblePlayers = plugin.GetVisiblePlayers();
                             plugin.UpdateStaffStatus(visiblePlayers);
                         }
@@ -441,10 +565,22 @@ public class MainWindow : Window, IDisposable
                 ImGui.EndTabItem();
             }
 
-            if (ImGui.BeginTabItem("VIP List"))
+            if ((DateTime.UtcNow - lastCheckStaffPlayer).TotalSeconds > 1)
             {
-                ImGui.EndTabItem();
+                lastCheckStaffPlayer = DateTime.UtcNow;
+                plugin.UpdateLocalPlayerStaff();
             }
+            if (plugin.localPlayer.IsStaff)
+            {
+                if (ImGui.BeginTabItem("VIP List"))
+                {
+                    ImGui.Text("VIP List");
+                    ImGui.Spacing();
+                    DrawVipTable(plugin.GetVisiblePlayers());
+                    ImGui.EndTabItem();
+                }
+            }
+            
 
             ImGui.EndTabBar();
         }
@@ -453,14 +589,17 @@ public class MainWindow : Window, IDisposable
         // --- Footer ---
         ImGui.Spacing();
         ImGui.Separator();
+        ImGui.AlignTextToFramePadding();
+        ImGui.Text("v0.4.0.0");
+        ImGui.SameLine();
         if (plugin.IsPluginAvailable("Lifestream"))
         {
-            if (ImGui.Button("Teleport to Habitat"))
+            if (RightAlignedButton("Teleport to Habitat"))
             {
                 Plugin.CommandManager.ProcessCommand("/li Raiden Mist 4 4");
             }
             ImGui.SameLine();
-            if (ImGui.Button("Teleport to Gothika"))
+            if (RightAlignedButton("Teleport to Gothika",150f * scale))
             {
                 Plugin.CommandManager.ProcessCommand("/li Shiva Mist 29 45");
             }
@@ -469,7 +608,5 @@ public class MainWindow : Window, IDisposable
         {
             ImGui.NewLine();
         }
-        ImGui.SameLine();
-        RightAlignedText("v0.3.1.0", 0);
     }
 }

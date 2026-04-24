@@ -2,6 +2,18 @@ using System;
 
 namespace Habitat.Models;
 
+public class LocalPlayer
+{
+    public string Name { get; set; } = "";
+    public string World { get; set; } = "";
+    public string FullName { get; set; } = "";
+    public bool IsVip { get; set; } = false;
+    public bool IsStaff { get; set; } = false;
+    public bool IsStaffHead { get; set; } = false;
+    public string StaffRole { get; set; } = "";
+    public string VipKind { get; set; } = "";
+}
+
 public class StaffMember
 {
     public string Character_name { get; set; } = "";
@@ -38,6 +50,10 @@ public class VipList
     public string World { get; set; } = "";
     public string Vip_kind { get; set; } = "";
     public DateOnly Vip_since { get; set; } = DateOnly.Parse("1900-01-01");
+    public string Discord_handle { get; set; } = "";
 }
 
-
+public class VipPerks
+{
+    //TODO
+}

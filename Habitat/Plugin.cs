@@ -11,10 +11,8 @@ using Dalamud.IoC;
 using Habitat.Windows;
 using Habitat.Models;
 using Habitat.Services;
-using Dalamud.Interface.Textures.TextureWraps;
 
 namespace Habitat;
-
 
 public sealed class Plugin : IDalamudPlugin
 {
@@ -36,8 +34,10 @@ public sealed class Plugin : IDalamudPlugin
     public List<Service> ServiceList { get; set; } = new();
     public SupabaseDataService<VipList> DataServiceVip { get; private set; }
     public SupabaseDataService<StaffMember> DataServiceStaff { get; private set; }
-    public string PlayerFullName { get; private set; } = string.Empty;
-    
+    public LocalPlayer localPlayer { get; set; }
+    private List<VisiblePlayer> cachedVisiblePlayers = new();
+    private DateTime lastVisiblePlayersUpdate = DateTime.MinValue;
+    private readonly TimeSpan visiblePlayersCacheDuration = TimeSpan.FromSeconds(1);
 
     public bool IsPluginAvailable(string name)
     {
@@ -48,49 +48,88 @@ public sealed class Plugin : IDalamudPlugin
         }
         return false;
     }
-    public string GetPlayerFullname()
+
+    public void UpdateLocalPlayerStaff()
     {
-        var playerName = PlayerState.CharacterName;
-        var playerHomeworldId = PlayerState.HomeWorld.RowId;
-        if (DataManager.GetExcelSheet<Lumina.Excel.Sheets.World>().TryGetRow(playerHomeworldId, out var playerHomeworld))
+        if (localPlayer == null)
+            return;
+
+        if (DataServiceStaff == null || DataServiceStaff.Data == null)
         {
-            var playerFullName = playerName + "@" + playerHomeworld.Name.ToString();
-            Log.Information($"{PluginInterface.Manifest.Name} local player name and homeworld resolved");
-            return playerFullName;
+            localPlayer.IsStaff = false;
+            localPlayer.IsStaffHead = false;
+            localPlayer.StaffRole = string.Empty;
+            return;
         }
-        Log.Information($"{PluginInterface.Manifest.Name} Error resolving player name and homeworld");
-        return "Unknown";
+
+        DataServiceStaff.EnsureData();
+
+        var match = DataServiceStaff.Data.FirstOrDefault(x =>
+            x.Character_name.Equals(localPlayer.Name, StringComparison.OrdinalIgnoreCase) &&
+            x.World.Equals(localPlayer.World, StringComparison.OrdinalIgnoreCase));
+
+        if (match != null)
+        {
+            localPlayer.IsStaff = true;
+            localPlayer.StaffRole = match.Role ?? string.Empty;
+            localPlayer.IsStaffHead = match.Head_staff;
+        }
+        else
+        {
+            localPlayer.IsStaff = false;
+            localPlayer.IsStaffHead = false;
+            localPlayer.StaffRole = string.Empty;
+        }
     }
 
-    public bool IsPlayerVip(string playerFullName)
+    public void UpdateLocalPlayerVip()
     {
+        if (localPlayer == null)
+            return;
+        if (DataServiceVip == null || DataServiceVip.Data == null)
+        {
+            localPlayer.IsVip = false;
+            localPlayer.VipKind = string.Empty;
+            return;
+        }
+
         DataServiceVip.EnsureData();
-        return DataServiceVip.Data.Any(x =>
-        string.Equals($"{x.Character_name}@{x.World}", playerFullName, StringComparison.OrdinalIgnoreCase));
+        var match = DataServiceVip.Data.FirstOrDefault(x =>
+            x.Character_name.Equals(localPlayer.Name, StringComparison.OrdinalIgnoreCase) &&
+            x.World.Equals(localPlayer.World, StringComparison.OrdinalIgnoreCase));
+
+        if (match != null)
+        {
+            localPlayer.IsVip = true;
+            localPlayer.VipKind = match.Vip_kind ?? string.Empty;
+        }
+        else
+        {
+            localPlayer.IsVip = false;
+            localPlayer.VipKind = string.Empty;
+        }
     }
 
     public List<VisiblePlayer> GetVisiblePlayers()
     {
+        if (DateTime.Now - lastVisiblePlayersUpdate < visiblePlayersCacheDuration)
+            return cachedVisiblePlayers;
         var players = new List<VisiblePlayer>();
         foreach (var obj in ObjectTable.PlayerObjects)
         {
-            string playerName = "";
-            string playerWorld = "";
-            if (obj == null) continue;
-            if (obj is IPlayerCharacter player)
+            if (obj is not IPlayerCharacter player)
+                continue;
+            var playerName = player.Name.TextValue;
+            var playerWorld = player.HomeWorld.Value.Name.ToString();
+            players.Add(new VisiblePlayer
             {
-                playerName = player.Name.TextValue;
-                playerWorld = player.HomeWorld.Value.Name.ToString();
-                players.Add(new VisiblePlayer
-                {
-                    Name = playerName,
-                    World = playerWorld
-                });
-                Log.Information($"{PluginInterface.Manifest.Name} Seeing {playerName}@{playerWorld}");
-            }
+                Name = playerName,
+                World = playerWorld
+            });
         }
-        Log.Information($"{PluginInterface.Manifest.Name} Visible Players Updated");
-        return players;
+        cachedVisiblePlayers = players;
+        lastVisiblePlayersUpdate = DateTime.Now;
+        return cachedVisiblePlayers;
     }
 
     public void UpdateStaffStatus(List<VisiblePlayer> visiblePlayers)
@@ -103,7 +142,6 @@ public sealed class Plugin : IDalamudPlugin
                 p.World.Equals(staff.World, StringComparison.OrdinalIgnoreCase)
             );
         }
-        Log.Information($"{PluginInterface.Manifest.Name} Staff Status Updated");
     }
 
     public Plugin()
@@ -131,9 +169,19 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
         PluginInterface.UiBuilder.OpenMainUi += ToggleMainUi;
 
-        //LoadStaffFromCsv();
-        //LoadServicesFromCsv();
-        PlayerFullName = GetPlayerFullname();
+        localPlayer = new LocalPlayer();
+        localPlayer.Name = PlayerState.CharacterName;
+        var playerHomeworldId = PlayerState.HomeWorld.RowId;
+        if (DataManager.GetExcelSheet<Lumina.Excel.Sheets.World>().TryGetRow(playerHomeworldId, out var playerHomeworld))
+        {
+            localPlayer.World = playerHomeworld.Name.ToString();
+            Log.Information($"{PluginInterface.Manifest.Name} local player name and homeworld resolved");
+        }
+        else
+        {
+            Log.Information($"{PluginInterface.Manifest.Name} Error resolving player name and homeworld");
+        }
+        localPlayer.FullName = (localPlayer.Name + "@" + localPlayer.World);
 
         DataServiceVip = new SupabaseDataService<VipList>(
             supabaseProjectUrl,
@@ -142,9 +190,9 @@ public sealed class Plugin : IDalamudPlugin
             "character_name",
             "world",
             "vip_kind",
-            "vip_since"
+            "vip_since",
+            "discord_handle"
             );
-        //DataServiceVip.EnsureData();
 
         DataServiceStaff = new SupabaseDataService<StaffMember>(
             supabaseProjectUrl,
@@ -162,14 +210,11 @@ public sealed class Plugin : IDalamudPlugin
             "habitat_dropdown",
             "gothika_dropdown"
             );
-        //DataServiceStaff.EnsureData();
-
         Log.Information($"{PluginInterface.Manifest.Name} loaded");
     }
 
     public void Dispose()
     {
-        // Unregister all actions to not leak anything during disposal of plugin
         PluginInterface.UiBuilder.Draw -= WindowSystem.Draw;
         PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
         PluginInterface.UiBuilder.OpenMainUi -= ToggleMainUi;
@@ -178,6 +223,7 @@ public sealed class Plugin : IDalamudPlugin
         MainWindow.Dispose();
         CommandManager.RemoveHandler(CommandName);
         DataServiceVip.Dispose();
+        DataServiceStaff.Dispose();
     }
 
     private void OnCommand(string command, string args)

@@ -1,12 +1,10 @@
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Habitat.Models;
 
 namespace Habitat.Services;
 
@@ -54,7 +52,6 @@ public class SupabaseDataService<Table> : IDisposable
     {
         if (DateTime.UtcNow - lastFetch < cacheDuration)
         {
-            //Log.Information($"{Plugin.PluginInterface.Manifest.Name} Supabase VipList cache hit");
             return;
         }
         lock (fetchLock)
