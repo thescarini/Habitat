@@ -11,6 +11,8 @@ using Dalamud.IoC;
 using Habitat.Windows;
 using Habitat.Models;
 using Habitat.Services;
+using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Client.System.String;
 
 namespace Habitat;
 
@@ -24,7 +26,8 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
     [PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
-            
+    [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
+
     private const string CommandName = "/habitat";
 
     public Configuration Configuration { get; init; }
@@ -38,6 +41,19 @@ public sealed class Plugin : IDalamudPlugin
     private List<VisiblePlayer> cachedVisiblePlayers = new();
     private DateTime lastVisiblePlayersUpdate = DateTime.MinValue;
     private readonly TimeSpan visiblePlayersCacheDuration = TimeSpan.FromSeconds(1);
+
+    public unsafe void SendTell(string message, string playerName, string world)
+    {
+        
+        if (string.IsNullOrWhiteSpace(message) ||
+            string.IsNullOrWhiteSpace(playerName) ||
+            string.IsNullOrWhiteSpace(world))
+            return;
+        string command = $"/tell {playerName}@{world} {message}";
+        Log.Information($"CMD: {command}");
+
+        UIModule.Instance()->ProcessChatBoxEntry(Utf8String.FromString($"{command}"));
+    }
 
     public bool IsPluginAvailable(string name)
     {

@@ -2,6 +2,7 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Habitat.Models;
 using Serilog;
 using System;
@@ -16,7 +17,8 @@ public class MainWindow : Window, IDisposable
     private readonly string habitatLogoPath;
     private readonly Plugin plugin;
     public bool climateChange = true;
-    private int dropboxSelected = 0;
+    private int dropboxHabitatSelected = 0;
+    private int dropboxGothikaSelected = 0;
     private int habitatMenu = 0;
     private int gothikaMenu = 0;
     private bool merchDisclaimer = false;
@@ -151,9 +153,9 @@ public class MainWindow : Window, IDisposable
                 ImGui.TableSetColumnIndex(3);
                 if (member.Status)
                 {
-                    if (ImGui.SmallButton("Send a Tell"))
+                    if (ImGui.SmallButton($"Send a Tell##{member.Character_name}_{member.World}"))
                     {
-                        Log.Information($"{Plugin.PluginInterface.Manifest.Name} Contact Button for {member.Character_name}@{member.World} clicked!");
+                        plugin.SendTell("Hi! I like to request your service!", member.Character_name, member.World);
                     }
                 }
                 ImGui.TableSetColumnIndex(4);
@@ -208,9 +210,9 @@ public class MainWindow : Window, IDisposable
                 ImGui.TableSetColumnIndex(2);
                 if (isVisible)
                 {
-                    if (ImGui.SmallButton("Contact"))
+                    if (ImGui.SmallButton($"Contact##{vip.Character_name}_{vip.World}"))
                     {
-                        // send tell?
+                        plugin.SendTell($"Hi!", vip.Character_name, vip.World);
                     }
                 }
                 ImGui.TableSetColumnIndex(3);
@@ -294,7 +296,6 @@ public class MainWindow : Window, IDisposable
     }
 
     
-
     public override void Draw()
     {
         var availableWindowsize = ImGui.GetContentRegionAvail();
@@ -386,9 +387,9 @@ public class MainWindow : Window, IDisposable
                         }
                         ImGui.Text("Staff role");
                         string[] dropdownItems = { "Venue Owners", "Bartenders", "Photographers", "VIP Hosts", "Dealers", "Receptionists", "Hypers", "Security", "Shout Runners"};
-                        Dropdown("", dropdownItems, ref dropboxSelected);
+                        Dropdown("", dropdownItems, ref dropboxHabitatSelected);
                         ImGui.NewLine();
-                        ListStaff(dropdownItems[dropboxSelected], false);
+                        ListStaff(dropdownItems[dropboxHabitatSelected], false);
                     }
                     ImGui.EndChild();
                     ImGui.EndTable();
@@ -537,9 +538,9 @@ public class MainWindow : Window, IDisposable
                         }
                         ImGui.Text("Staff role");
                         string[] dropdownItems = { "Floor Hosts", "Photographers", "Tarot Ceremony", "Security", "Shout Runners" };
-                        Dropdown("", dropdownItems, ref dropboxSelected);
+                        Dropdown("", dropdownItems, ref dropboxGothikaSelected);
                         ImGui.NewLine();
-                        ListStaff(dropdownItems[dropboxSelected], true);
+                        ListStaff(dropdownItems[dropboxGothikaSelected], true);
                     }
                     ImGui.EndChild();
                     ImGui.EndTable();
@@ -590,7 +591,7 @@ public class MainWindow : Window, IDisposable
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.AlignTextToFramePadding();
-        ImGui.Text("v0.4.0.0");
+        ImGui.Text("v0.4.5.0");
         ImGui.SameLine();
         if (plugin.IsPluginAvailable("Lifestream"))
         {
