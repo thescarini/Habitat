@@ -37,6 +37,8 @@ public sealed class Plugin : IDalamudPlugin
     public List<Service> ServiceList { get; set; } = new();
     public SupabaseDataService<VipList> DataServiceVip { get; private set; }
     public SupabaseDataService<StaffMember> DataServiceStaff { get; private set; }
+    public SupabaseDataService<VipPerks> DataServiceVipPerks { get; private set; }
+    public SupabaseDataService<Service> DataServiceServices { get; private set; }
     public LocalPlayer localPlayer { get; set; }
     private List<VisiblePlayer> cachedVisiblePlayers = new();
     private DateTime lastVisiblePlayersUpdate = DateTime.MinValue;
@@ -148,6 +150,21 @@ public sealed class Plugin : IDalamudPlugin
         return cachedVisiblePlayers;
     }
 
+    public bool IsPerkAllowed(VipPerks perk)
+    {
+        if (localPlayer == null || !localPlayer.IsVip)
+            return false;
+
+        return localPlayer.VipKind.ToLowerInvariant() switch
+        {
+            "vip" => perk.Is_vip,
+            "booster vip" => perk.Is_booster,
+            "lifetime vip" => perk.Is_lifetime,
+            "monthly vip" => perk.Is_monthly,
+            _ => false
+        };
+    }
+
     public void UpdateStaffStatus(List<VisiblePlayer> visiblePlayers)
     {
         DataServiceStaff.EnsureData();
@@ -226,6 +243,32 @@ public sealed class Plugin : IDalamudPlugin
             "habitat_dropdown",
             "gothika_dropdown"
             );
+
+        DataServiceVipPerks = new SupabaseDataService<VipPerks>(
+            supabaseProjectUrl,
+            supabaseAnonKey,
+            "vip_perks",
+            "perk_name",
+            "is_vip",
+            "is_booster",
+            "is_lifetime",
+            "is_monthly"
+            );
+        DataServiceVipPerks.EnsureData();
+
+        DataServiceServices = new SupabaseDataService<Service>(
+            supabaseProjectUrl,
+            supabaseAnonKey,
+            "services",
+            "service_name",
+            "type",
+            "price",
+            "description",
+            "is_habitat",
+            "is_gothika"
+            );
+        DataServiceServices.EnsureData();
+
         Log.Information($"{PluginInterface.Manifest.Name} loaded");
     }
 
@@ -240,6 +283,7 @@ public sealed class Plugin : IDalamudPlugin
         CommandManager.RemoveHandler(CommandName);
         DataServiceVip.Dispose();
         DataServiceStaff.Dispose();
+        DataServiceVipPerks.Dispose();
     }
 
     private void OnCommand(string command, string args)

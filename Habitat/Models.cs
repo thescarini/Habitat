@@ -32,10 +32,12 @@ public class StaffMember
 
 public class Service
 {
-    public string Name { get; set; } = "";
+    public string Service_name { get; set; } = "";
     public string Type { get; set; } = "";
     public string Price { get; set; } = "";
     public string Description { get; set; } = "";
+    public bool Is_habitat { get; set; } = false;
+    public bool Is_gothika { get; set; } = false;
 }
 
 public class VisiblePlayer
@@ -55,5 +57,9 @@ public class VipList
 
 public class VipPerks
 {
-    //TODO
+    public string Perk_name { get; set; } = "";
+    public bool Is_vip { get; set; } = false;
+    public bool Is_booster { get; set; } = false;
+    public bool Is_lifetime { get; set; } = false;
+    public bool Is_monthly { get; set; } = false;
 }

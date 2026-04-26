@@ -19,6 +19,8 @@ public class MainWindow : Window, IDisposable
     public bool climateChange = true;
     private int dropboxHabitatSelected = 0;
     private int dropboxGothikaSelected = 0;
+    private int dropboxHabitatService = 0;
+    private int dropboxGothikaService = 0;
     private int habitatMenu = 0;
     private int gothikaMenu = 0;
     private bool merchDisclaimer = false;
@@ -77,27 +79,39 @@ public class MainWindow : Window, IDisposable
         }
     }
 
+    private void ListServices(string servicetype, bool gothikamode = false)
+    {
+        var services = plugin.DataServiceServices.Data
+            .Where(s => s.Type.Equals(servicetype, StringComparison.OrdinalIgnoreCase)
+            && (gothikamode ? s.Is_gothika : s.Is_habitat))
+            .OrderBy(s => s.Service_name)
+            .ToList();
+
+        if (ImGui.BeginTable($"Services ##{servicetype}", 3))
+        {
+            ImGui.TableSetupColumn("Service Name", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Price", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Description", ImGuiTableColumnFlags.WidthStretch);
+            ImGui.TableHeadersRow();
+            for (int i = 0; i < services.Count; i++)
+            {
+                var service = services[i];
+                ImGui.TableNextRow();
+                ImGui.TableSetColumnIndex(0);
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text(service.Service_name);
+                ImGui.TableSetColumnIndex(1);
+                ImGui.Text(service.Price);
+                ImGui.TableSetColumnIndex(2);
+                ImGui.TextWrapped(service.Description);
+            }
+            ImGui.EndTable();
+        }
+    }
+    
+
     private void ListStaff(string role, bool gothikamode)
     {
-        foreach (var s in plugin.DataServiceStaff.Data)
-        {
-            if (s == null)
-                Log.Information($"{Plugin.PluginInterface.Manifest.Name} An entry of DataServiceStaff.Data is NULL!");
-            if (s.Link == null)
-                Log.Information($"{Plugin.PluginInterface.Manifest.Name} Link NULL for {s.Character_name}");
-            if (s.Hiatus == null)
-                Log.Information($"{Plugin.PluginInterface.Manifest.Name} Hiatus NULL for {s.Character_name}");
-            if (s.Head_staff == null)
-                Log.Information($"{Plugin.PluginInterface.Manifest.Name} Head_staff NULL for {s.Character_name}");
-            if (gothikamode && s.Is_Gothika == null)
-                Log.Information($"{Plugin.PluginInterface.Manifest.Name} Is_gothika NULL for {s.Character_name}");
-            if (gothikamode && s.Gothika_Role == null)
-                Log.Information($"{Plugin.PluginInterface.Manifest.Name} Gothika_roll NULL for {s.Character_name}");
-            if (gothikamode && s?.Gothika_dropdown == null)
-                Log.Information($"{Plugin.PluginInterface.Manifest.Name} Gothika_dropdown NULL for {s.Character_name}");
-            if (!gothikamode && s?.Habitat_dropdown == null)
-                Log.Information($"{Plugin.PluginInterface.Manifest.Name} Habitat_dropdown NULL for {s.Character_name}");
-        }
         List<StaffMember> staff;
         if (gothikamode)
         {
@@ -304,7 +318,6 @@ public class MainWindow : Window, IDisposable
 
         ImGui.BeginChild("MainWindow", new Vector2(0, -footerHeight), false, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
-        // --- Header ---
         var habitatLogo = Plugin.TextureProvider.GetFromFile(habitatLogoPath).GetWrapOrDefault();
         if (habitatLogo != null)
         {
@@ -334,7 +347,6 @@ public class MainWindow : Window, IDisposable
 
                     ImGui.TableNextRow();
 
-                    // --- Sidebar ---
                     ImGui.TableSetColumnIndex(0);
 
                     if (ImGui.Selectable("About Habitat", habitatMenu == 0))
@@ -346,7 +358,6 @@ public class MainWindow : Window, IDisposable
                     if (ImGui.Selectable("Services", habitatMenu == 2))
                         habitatMenu = 2;
 
-                    // --- Content ---
                     ImGui.TableSetColumnIndex(1);
                     ImGui.BeginChild("ContentScoll", new System.Numerics.Vector2(0, 0), false);
 
@@ -357,7 +368,7 @@ public class MainWindow : Window, IDisposable
                         ImGui.Separator();
                         ImGui.NewLine();
                         ImGui.Text("Location: (Light) Raiden, Mist W4 P4");
-                        ImGui.NewLine();
+                        ImGui.Spacing();
                         ImGui.Text("Opening Time: Every Friday");
                         ImGui.Text("- From 16:00 to 02:00 ST (Summer Time)");
                         ImGui.Text("- From 17:00 to 03:00 ST (Winter Time)");
@@ -390,6 +401,64 @@ public class MainWindow : Window, IDisposable
                         Dropdown("", dropdownItems, ref dropboxHabitatSelected);
                         ImGui.NewLine();
                         ListStaff(dropdownItems[dropboxHabitatSelected], false);
+                    }
+
+                    if (habitatMenu == 2)
+                    {
+                        ImGui.Text("Service Category:");
+                        string[] dropdownItems = { "Bar Menu", "Chambers", "Games", "Photography"};
+                        Dropdown("", dropdownItems, ref dropboxHabitatService);
+                        ImGui.NewLine();
+                        if (dropboxHabitatService == 0)
+                        {
+                            ImGui.Text("General:");
+                            ListServices("bar");
+                            ImGui.NewLine();
+                            ImGui.Text("Habitat Classics:");
+                            ListServices("bar_classics");
+                            ImGui.NewLine();
+                            ImGui.Text("Habitat Specials:");
+                            ListServices("bar_specials");
+                        }
+
+                        if (dropboxHabitatService == 1)
+                        {
+                            ImGui.TextWrapped("Looking for a more private space during the night? Chambers are available for booking during opening hours.");
+                            ImGui.NewLine();
+                            ImGui.Text("Prices:");
+                            ImGui.BulletText("400.000 Gil / Hour");
+                            ImGui.BulletText("2.000.000 Gil / Full Night");
+                            ImGui.NewLine();
+                            ImGui.Text("Notes:");
+                            ImGui.BulletText("Chambers are available while supplies last");
+                            ImGui.BulletText("Access is valid for the selected duration only");
+                            ImGui.NewLine();
+                            if (RightAlignedButton("Rent a Room"))
+                            {
+                                plugin.SendTell("Hi! I like to rent a private chamber.", "Taniri Danolnith", "Raiden");
+                            }
+                            ImGui.SameLine();
+                            if (RightAlignedButton("View Chambers", 100))
+                            {
+                                Dalamud.Utility.Util.OpenLink("https://discord.com/channels/1180989907930468392/1188025857340604466");
+                            }
+                        }
+
+                        if (dropboxHabitatService == 2)
+                        {
+                            ImGui.Text("Games");
+                            ListServices("games");
+                        }
+
+                        if (dropboxHabitatService == 3)
+                        {
+                            ImGui.TextWrapped("Our sessions offer more than just a picture; they are a chance to express yourself, embrace your confidence, and capture the spark that makes you unforgettable.");
+                            ImGui.NewLine();
+                            ImGui.Text("Prices:");
+                            ImGui.BulletText("SFW 200.000 Gil per Model");
+                            ImGui.BulletText("NSFW 500.000 Gil per Model");
+                        }
+
                     }
                     ImGui.EndChild();
                     ImGui.EndTable();
@@ -453,24 +522,23 @@ public class MainWindow : Window, IDisposable
                     }
                     ImGui.TableSetColumnIndex(1);
                     ImGui.BeginChild("ContentScoll", new System.Numerics.Vector2(0, 0), false);
-                    ImGui.Text("Active VIP Perks: (not working yet)");
+                    ImGui.Text("Active VIP Perks:");
                     ImGui.Spacing();
 
-                    ImGui.BulletText("Access to Ocean's Edge");
-                    ImGui.BulletText("Access to the Second Floor Reserved Area");
-                    ImGui.BulletText("VIP Area Drink Service (Maid/Butler Services)");
-                    ImGui.BulletText("VIP Area Dedicated Hosts");
-                    ImGui.BulletText("VIP CWLS and Syncshell");
-                    ImGui.BulletText("Server VIP Role");
-                    ImGui.BulletText("Server Lifetime VIP Role");
-                    ImGui.BulletText("5 Free Drinks per Night (Habitat Classics)");
-                    ImGui.BulletText("1 Free Redeemable Scratchcard per Night");
-                    ImGui.BulletText("Line Skip (When the Venue is Capped)");
-                    ImGui.BulletText("Priority Queue for Photography Commissions");
-                    ImGui.BulletText("Buy 20 Scratchcards Get 2 Bonus Scratchcards");
-                    ImGui.BulletText("Ripple Shots Limit Increased From 20 To 30");
-                    ImGui.BulletText("Raffle Tickets Limit Increased From 40 To 50");
-                    ImGui.BulletText("Chance to unlock a Private Chamber for the full night (Up to 6 Guests)");
+                    foreach (var perk in plugin.DataServiceVipPerks.Data)
+                    {
+                        ImGui.Bullet();
+                        ImGui.SameLine();
+                        bool allowed = plugin.IsPerkAllowed(perk);
+                        if (allowed)
+                        {
+                            ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), perk.Perk_name);
+                        }
+                        else
+                        {
+                            ImGui.TextDisabled(perk.Perk_name);
+                        }
+                    }
                     ImGui.EndChild();
                     ImGui.EndTable();
                 }
@@ -486,7 +554,6 @@ public class MainWindow : Window, IDisposable
 
                     ImGui.TableNextRow();
 
-                    // --- Sidebar ---
                     ImGui.TableSetColumnIndex(0);
 
                     if (ImGui.Selectable("About Gothika", gothikaMenu == 0))
@@ -498,7 +565,6 @@ public class MainWindow : Window, IDisposable
                     if (ImGui.Selectable("Services", gothikaMenu == 2))
                         gothikaMenu = 2;
 
-                    // --- Content ---
                     ImGui.TableSetColumnIndex(1);
                     ImGui.BeginChild("ContentScoll", new System.Numerics.Vector2(0, 0), false);
                     if (gothikaMenu == 0)
@@ -508,7 +574,7 @@ public class MainWindow : Window, IDisposable
                         ImGui.Separator();
                         ImGui.NewLine();
                         ImGui.Text("Location: (Light) Shiva, Mist W29 P45");
-                        ImGui.NewLine();
+                        ImGui.Spacing();
                         ImGui.Text("Opening Time: Monthly Saturdays");
                         ImGui.Text("- From 17:00 to 00:30 ST (Summer Time)");
                         ImGui.Text("- From 18:00 to 01:30 ST (Winter Time)");
@@ -542,6 +608,18 @@ public class MainWindow : Window, IDisposable
                         ImGui.NewLine();
                         ListStaff(dropdownItems[dropboxGothikaSelected], true);
                     }
+
+                    if (gothikaMenu == 2)
+                    {
+                        ImGui.Text("Service Category:");
+                        string[] dropdownItems = { "GPose Contest", "Phoenix Nights Bingo", "Phoenix Nights Blackjack", "Tarot Ceremony" };
+                        Dropdown("", dropdownItems, ref dropboxGothikaService);
+                        ImGui.NewLine();
+
+                    }
+                    
+
+
                     ImGui.EndChild();
                     ImGui.EndTable();
                 }
@@ -587,11 +665,10 @@ public class MainWindow : Window, IDisposable
         }
         ImGui.EndChild();
 
-        // --- Footer ---
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.AlignTextToFramePadding();
-        ImGui.Text("v0.4.5.0");
+        ImGui.Text("v0.5.1.0");
         ImGui.SameLine();
         if (plugin.IsPluginAvailable("Lifestream"))
         {
