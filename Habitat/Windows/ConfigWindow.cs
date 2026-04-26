@@ -41,8 +41,8 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
-        if (plugin.localPlayer.FullName == "A'scari Diamonds@Shiva" ||  plugin.localPlayer.FullName == "Taniri Danolnith@Raiden" || plugin.localPlayer.FullName == "Destiny Skyforged@Raiden")
-        {
+        //if (plugin.localPlayer.FullName == "A'scari Diamonds@Shiva" ||  plugin.localPlayer.FullName == "Taniri Danolnith@Raiden" || plugin.localPlayer.FullName == "Destiny Skyforged@Raiden")
+        //{
             ImGui.Text("Dev Debug Menu");
             if (ImGui.Button("force reload DataServiceVip"))
             {
@@ -51,6 +51,14 @@ public class ConfigWindow : Window, IDisposable
             if (ImGui.Button("force reload DataServiceStaff"))
             {
                 plugin.DataServiceStaff.Refresh();
+            }
+            if (ImGui.Button("force reload DataServiceServices"))
+            {
+                plugin.DataServiceServices.Refresh();
+            }
+            if (ImGui.Button("force reload DataServiceVipPerks"))
+            {
+                plugin.DataServiceVipPerks.Refresh();
             }
             if (ImGui.Button("reset loaded VIP status"))
             {
@@ -63,7 +71,7 @@ public class ConfigWindow : Window, IDisposable
                 plugin.localPlayer.IsStaffHead = false;
                 plugin.localPlayer.StaffRole = string.Empty;
             }
-        }
+        //}
         
 
         // Can't ref a property, so use a local copy
