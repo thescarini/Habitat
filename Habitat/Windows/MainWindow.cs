@@ -2,7 +2,6 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Habitat.Models;
 using Serilog;
 using System;
@@ -31,10 +30,8 @@ public class MainWindow : Window, IDisposable
     {
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(650, 500),
-            MaximumSize = new Vector2(650, 500)
-                //MathF.Min (ImGui.GetMainViewport().Size.X * 0.9f, 1600f),
-                //MathF.Min (ImGui.GetMainViewport().Size.Y * 0.9f, 1000f))
+            MinimumSize = new Vector2(800, 650),
+            MaximumSize = new Vector2(800, 650)
         };
 
         this.TitleBarButtons = new List<TitleBarButton>
@@ -67,7 +64,7 @@ public class MainWindow : Window, IDisposable
 
     private void LinkText(string text, string url)
     {
-        ImGui.TextColored(new Vector4(0.2f, 0.6f, 1f, 1f), text);
+        ImGui.TextColored(HabitatStyle.Accent, text);
         if (ImGui.IsItemHovered())
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -158,11 +155,11 @@ public class MainWindow : Window, IDisposable
                 ImGui.TableSetColumnIndex(2);
                 if (member.Status)
                 {
-                    ImGui.TextColored(new Vector4(0,1,0,1), "available");
+                    ImGui.TextColored(HabitatStyle.Success, "available");
                 }
                 else
                 {
-                    ImGui.TextDisabled("unavailable");
+                    ImGui.TextColored(HabitatStyle.TextMuted, "unavailable");
                 }
                 ImGui.TableSetColumnIndex(3);
                 if (member.Status)
@@ -197,11 +194,11 @@ public class MainWindow : Window, IDisposable
         if (ImGui.BeginTable("VipTable", 7,ImGuiTableFlags.ScrollY,new Vector2(0, size.Y)))
         {
             ImGui.TableSetupColumn("VIP Kind");
-            ImGui.TableSetupColumn("Name");
-            ImGui.TableSetupColumn("Contact");
+            ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Contact", ImGuiTableColumnFlags.WidthFixed, 65f * ImGui.GetIO().FontGlobalScale);
             ImGui.TableSetupColumn("Status");
             ImGui.TableSetupColumn("World");
-            ImGui.TableSetupColumn("Discord");
+            ImGui.TableSetupColumn("Discord", ImGuiTableColumnFlags.WidthStretch);
             ImGui.TableSetupColumn("VIP Since");
             ImGui.TableHeadersRow();
             ImGui.TableSetupScrollFreeze(0, 1);
@@ -232,11 +229,11 @@ public class MainWindow : Window, IDisposable
                 ImGui.TableSetColumnIndex(3);
                 if (isVisible)
                 {
-                    ImGui.TextColored(new Vector4(0, 1, 0, 1), "available");
+                    ImGui.TextColored(HabitatStyle.Success, "available");
                 }
                 else
                 {
-                    ImGui.TextDisabled("unavailable");
+                    ImGui.TextColored(HabitatStyle.TextMuted, "unavailable");
                 }
                 ImGui.TableSetColumnIndex(4);
                 ImGui.TextUnformatted(vip.World);
@@ -314,20 +311,21 @@ public class MainWindow : Window, IDisposable
     {
         var availableWindowsize = ImGui.GetContentRegionAvail();
         float scale = ImGui.GetIO().FontGlobalScale;
-        var footerHeight = 30f * scale;
+        using var theme = HabitatStyle.PushTheme(scale);
+        var footerHeight = 45f * scale;
 
         ImGui.BeginChild("MainWindow", new Vector2(0, -footerHeight), false, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
         var habitatLogo = Plugin.TextureProvider.GetFromFile(habitatLogoPath).GetWrapOrDefault();
         if (habitatLogo != null)
         {
-            ImGui.Image(habitatLogo.Handle, habitatLogo.Size / 7.0f * scale);
+            ImGui.Image(habitatLogo.Handle, habitatLogo.Size / 6.0f * scale);
         }
         
         ImGui.AlignTextToFramePadding();
         ImGui.Text($"Welcome {plugin.localPlayer.Name} from {plugin.localPlayer.World}");
         ImGui.SameLine();
-        RightAlignedText("Climate Change",50f * scale);
+        RightAlignedText("Climate Change",60f * scale);
         ImGui.SameLine();
         if (ImGuiComponents.ToggleButton("ClimateChangeButton", ref climateChange))
         {
@@ -364,17 +362,17 @@ public class MainWindow : Window, IDisposable
                     if (habitatMenu == 0)
                     {
                         ImGui.TextWrapped("Habitat is a semi-immersive 18+ FFXIV nightclub located in The Mist, Raiden server, Light Data Center. Every Friday, the venue comes alive as a full night experience built around music, interaction, and energy on the floor.");
-                        ImGui.NewLine();
+                        ImGui.Spacing();
                         ImGui.Separator();
-                        ImGui.NewLine();
+                        ImGui.Spacing();
                         ImGui.Text("Location: (Light) Raiden, Mist W4 P4");
                         ImGui.Spacing();
                         ImGui.Text("Opening Time: Every Friday");
-                        ImGui.Text("- From 16:00 to 02:00 ST (Summer Time)");
-                        ImGui.Text("- From 17:00 to 03:00 ST (Winter Time)");
-                        ImGui.NewLine();
+                        ImGui.BulletText("From 16:00 to 02:00 ST (Summer Time)");
+                        ImGui.BulletText("From 17:00 to 03:00 ST (Winter Time)");
+                        ImGui.Spacing();
                         ImGui.Separator();
-                        ImGui.NewLine();
+                        ImGui.Spacing();
                         ImGui.Text("Discord: "); ImGui.SameLine();
                         LinkText("https://discord.gg/habitatxiv", "https://discord.gg/habitatxiv");
 
@@ -438,7 +436,7 @@ public class MainWindow : Window, IDisposable
                                 plugin.SendTell("Hi! I like to rent a private chamber.", "Taniri Danolnith", "Raiden");
                             }
                             ImGui.SameLine();
-                            if (RightAlignedButton("View Chambers", 100))
+                            if (RightAlignedButton("View Chambers", 130*scale))
                             {
                                 Dalamud.Utility.Util.OpenLink("https://discord.com/channels/1180989907930468392/1188025857340604466");
                             }
@@ -486,39 +484,41 @@ public class MainWindow : Window, IDisposable
                     ImGui.SameLine();
                     if (plugin.localPlayer.IsVip)
                     {
-                        ImGui.TextColored(new Vector4(0, 1, 0, 1), plugin.localPlayer.VipKind);
+                        ImGui.TextColored(HabitatStyle.Success, plugin.localPlayer.VipKind);
                     }
                     else
                     {
-                        ImGui.TextColored(new Vector4(1, 0, 0, 1), "no VIP");
+                        ImGui.TextColored(HabitatStyle.TextDim, "no VIP");
                     }
                     ImGui.Spacing();
                     if (ImGui.Button("Upgrade VIP Status"))
                     {
-                        Log.Information($"{Plugin.PluginInterface.Manifest.Name} Upgrade VIP Status clicked!");
+                        plugin.SendTell("Hi, im interested in an upgrade for my VIP status.", "Taniri Danolnith", "Raiden");
                     }
                     if (plugin.localPlayer.VipKind == "Lifetime VIP" || plugin.localPlayer.VipKind == "Booster VIP")
                     {
                         ImGui.NewLine();
                         ImGui.Text("VIP Syncshell");
-                        ImGui.Spacing();
                         ImGui.Text("Lightless Syncshell ID:");
                         TextfieldToClipboard("feetsniffa");
                         ImGui.Spacing();
                         ImGui.Text("Lightless Syncshell Password:");
                         TextfieldToClipboard("sniffinggoodfeet!");
-                        ImGui.NewLine();
+                        ImGui.Spacing();
                         ImGui.TextColoredWrapped(new Vector4(1, 0, 0, 1), "Habitat is not responsible for any issues that may occur while using the Syncshell.");
                     }
                     ImGui.NewLine();
-                    if (ImGui.Button("Request VIP Host"))
+                    if (plugin.localPlayer.IsVip)
                     {
-                        Log.Information($"{Plugin.PluginInterface.Manifest.Name} VIP Host requested");
-                    }
-                    ImGui.SameLine();
-                    if (ImGui.Button("Order a Drink"))
-                    {
-                        Log.Information($"{Plugin.PluginInterface.Manifest.Name} VIP Order a Drink");
+                        if (ImGui.Button("Request VIP Host"))
+                        {
+                            Log.Information($"{Plugin.PluginInterface.Manifest.Name} VIP Host requested");
+                        }
+                        ImGui.SameLine();
+                        if (ImGui.Button("Order a Drink"))
+                        {
+                            Log.Information($"{Plugin.PluginInterface.Manifest.Name} VIP Order a Drink");
+                        }
                     }
                     ImGui.TableSetColumnIndex(1);
                     ImGui.BeginChild("ContentScoll", new System.Numerics.Vector2(0, 0), false);
@@ -570,17 +570,17 @@ public class MainWindow : Window, IDisposable
                     if (gothikaMenu == 0)
                     {
                         ImGui.TextWrapped("Gothika is a monthly descent into the realm of dark and shadow, curated by Habitat. A sanctuary for those who live and breathe goth, metal, and the deeper shades of alternative music.");
-                        ImGui.NewLine();
+                        ImGui.Spacing();
                         ImGui.Separator();
-                        ImGui.NewLine();
+                        ImGui.Spacing();
                         ImGui.Text("Location: (Light) Shiva, Mist W29 P45");
                         ImGui.Spacing();
                         ImGui.Text("Opening Time: Monthly Saturdays");
                         ImGui.Text("- From 17:00 to 00:30 ST (Summer Time)");
                         ImGui.Text("- From 18:00 to 01:30 ST (Winter Time)");
-                        ImGui.NewLine();
+                        ImGui.Spacing();
                         ImGui.Separator();
-                        ImGui.NewLine();
+                        ImGui.Spacing();
                         ImGui.Text("Discord: "); ImGui.SameLine();
                         LinkText("https://discord.gg/habitatxiv", "https://discord.gg/habitatxiv");
 
@@ -614,8 +614,90 @@ public class MainWindow : Window, IDisposable
                         ImGui.Text("Service Category:");
                         string[] dropdownItems = { "GPose Contest", "Phoenix Nights Bingo", "Phoenix Nights Blackjack", "Tarot Ceremony" };
                         Dropdown("", dropdownItems, ref dropboxGothikaService);
-                        ImGui.NewLine();
+                        
 
+                        if (dropboxGothikaService == 0)
+                        {
+                            ImGui.TextWrapped("Post your entry in the contests-entries channel before the deadline. Winners are chosen live during the night... be there to claim it.");
+                            ImGui.Spacing();
+                            ImGui.Text("Prizes:");
+                            if (ImGui.BeginTable("Gothika Gpose",3))
+                            {
+                                ImGui.TableSetupColumn("1st Place", ImGuiTableColumnFlags.WidthFixed);
+                                ImGui.TableSetupColumn("2nd Place", ImGuiTableColumnFlags.WidthStretch);
+                                ImGui.TableSetupColumn("3nd Place", ImGuiTableColumnFlags.WidthStretch);
+                                ImGui.TableNextRow();
+                                ImGui.TableSetColumnIndex(0);
+                                ImGui.Text("1st Place");
+                                ImGui.BulletText("3.000.000 Gil");
+                                ImGui.BulletText("Discord Badge & Role");
+                                ImGui.BulletText("Featured on next Event Visuals");
+                                ImGui.TableSetColumnIndex(1);
+                                ImGui.Text("2nd Place");
+                                ImGui.BulletText("2.000.000 Gil");
+                                ImGui.BulletText("Discord Badge & Role");
+                                ImGui.TableSetColumnIndex(2);
+                                ImGui.Text("3rd Place");
+                                ImGui.BulletText("1.000.000 Gil");
+                                ImGui.BulletText("Discord Badge & Role");
+                            }
+                            ImGui.EndTable();
+                            ImGui.Spacing();
+                            ImGui.Text("Rules:");
+                            ImGui.BulletText("One entry per person. Group poses allowed. Modded and Vanilla welcome.");
+                            ImGui.BulletText("NSFW is fine, if cloaked in spoilers");
+                            ImGui.BulletText("Edits are welcome but let the truth of your Character remain.");
+                            ImGui.BulletText("Light background animations are allowed as long as your Character remains the focus");
+                            if (RightAlignedButton("Post Your Entry"))
+                            {
+
+                            }
+
+                        }
+
+                        if (dropboxGothikaService == 1)
+                        {
+                            ImGui.Text("Rules:");
+                            ImGui.TextColored(HabitatStyle.Warning, "The goal is to cross out 5 numbers on your ticket.");
+                            ImGui.Spacing();
+                            ImGui.TextWrapped("Buy your ticket from the game host, who will provide a link (QR available for mobile). Once the game starts, numbers (1–25) are rolled in-game using /random and called in /yell. They will appear automatically on your ticket. If a number is repeated, it will be re-rolled.");
+                            ImGui.TextWrapped("When you cross out 5 numbers, call “Bingo” in /yell to claim your win (other chats won’t count).");
+                            ImGui.TextWrapped("Winning rules may vary. The prize may go to the first player or be split between multiple winners, depending on the round.");
+                        }
+
+                        if (dropboxGothikaService == 2)
+                        {
+                            ImGui.Text("Rules:");
+                            ImGui.TextColored(HabitatStyle.Warning, "Get as close to 21 as possible without going over. Beat the dealer to win.");
+                            ImGui.TextColored(HabitatStyle.Warning, "Busting (over 21) is an automatic loss.");
+                            ImGui.Spacing();
+                            ImGui.Text("Cards are dealt via /dice 13");
+                            ImGui.BulletText("Ace = 1 or 11");
+                            ImGui.BulletText("11-13 = 10");
+                            ImGui.NewLine();
+                            ImGui.Text("On your turn:");
+                            ImGui.Spacing();
+                            ImGui.Text("Hit: draw a card");
+                            ImGui.Text("Stand: end your turn");
+                            ImGui.Text("Double Down (first turn): double bet, draw once, then stand");
+                            ImGui.Text("Split (matching cards): play two hands (extra bet required)");
+                            ImGui.Spacing();
+                            ImGui.Text("Dealer draws after all players, stopping at 16/17+ (rules may vary).");
+                            ImGui.Text("5+ cards = Charlie (may grant bonus or auto-win depending on the table)");
+                        }
+
+                        if (dropboxGothikaService == 3)
+                        {
+                            ImGui.TextWrapped("Search for Answers. Away from the noise, the Tarot Lounge offers a moment to settle. You may bring a question, a feeling… or simply ask for a reading.");
+                            ImGui.Spacing();
+                            ImGui.Text("Rules:");
+                            ImGui.Text("I - The Omen");
+                            ImGui.TextWrapped("When you’re ready, The Oracle begins. A Major Arcana reading, quiet and intimate, shaped into a clear message.");
+                            ImGui.Text("II - The Elixir");
+                            ImGui.TextWrapped("As the reading unfolds, The Apothecary prepares your elixir.");
+                            ImGui.Text("III - The Major Arcana");
+                            ImGui.TextWrapped("The Tarot Ceremony is guided by the Major Arcana, the most powerful cards of the deck.");
+                        }
                     }
                     
 
@@ -633,7 +715,7 @@ public class MainWindow : Window, IDisposable
                 ImGui.NewLine();
                 ImGui.TextWrapped("Take a look around! We’ve put together a collection of downloads to bring Habitat closer to you. From clothing, minions, and animations... to the venue interior pack for the closest possible experience. All downloads are available on our Discord server, feel free to explore, try things out, and make it your own.");
                 ImGui.NewLine();
-                ImGui.TextColoredWrapped(new Vector4(1, 0, 0, 1), "By using modded content, you acknowledge that you are doing so at your own risk. Modded environments and third-party tools may be unstable and can lead to crashes, performance issues, or other unintended effects.");
+                ImGui.TextColoredWrapped(HabitatStyle.Danger, "By using modded content, you acknowledge that you are doing so at your own risk. Modded environments and third-party tools may be unstable and can lead to crashes, performance issues, or other unintended effects.");
                 ImGui.NewLine();
                 ImGui.Checkbox("I have read the disclaimer", ref merchDisclaimer);
                 ImGui.NewLine();
@@ -664,11 +746,8 @@ public class MainWindow : Window, IDisposable
             ImGui.EndTabBar();
         }
         ImGui.EndChild();
-
-        ImGui.Spacing();
-        ImGui.Separator();
         ImGui.AlignTextToFramePadding();
-        ImGui.Text("v0.5.1.1");
+        ImGui.Text("v0.8.0.1");
         ImGui.SameLine();
         if (plugin.IsPluginAvailable("Lifestream"))
         {

@@ -18,7 +18,7 @@ public class ConfigWindow : Window, IDisposable
         Flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
                 ImGuiWindowFlags.NoScrollWithMouse;
 
-        Size = new Vector2(400, 300);
+        Size = new Vector2(420, 624);
         SizeCondition = ImGuiCond.Always;
         configuration = plugin.Configuration;
         this.plugin = plugin;
@@ -39,40 +39,88 @@ public class ConfigWindow : Window, IDisposable
         }*/
     }
 
+    private bool DrawPrimaryButton(string label, Vector2 size)
+    {
+        var scale = ImGui.GetIO().FontGlobalScale;
+        using var style = HabitatStyle.PushPrimaryButtonStyle(scale);
+        return ImGui.Button(label, size);
+    }
+
+    private bool DrawSecondaryButton(string label, Vector2 size)
+    {
+        var scale = ImGui.GetIO().FontGlobalScale;
+        using var style = HabitatStyle.PushSecondaryButtonStyle(scale);
+        return ImGui.Button(label, size);
+    }
+
     public override void Draw()
     {
-        //if (plugin.localPlayer.FullName == "A'scari Diamonds@Shiva" ||  plugin.localPlayer.FullName == "Taniri Danolnith@Raiden" || plugin.localPlayer.FullName == "Destiny Skyforged@Raiden")
-        //{
-            ImGui.Text("Dev Debug Menu");
-            if (ImGui.Button("force reload DataServiceVip"))
-            {
-                plugin.DataServiceVip.Refresh();
-            }
-            if (ImGui.Button("force reload DataServiceStaff"))
-            {
-                plugin.DataServiceStaff.Refresh();
-            }
-            if (ImGui.Button("force reload DataServiceServices"))
-            {
-                plugin.DataServiceServices.Refresh();
-            }
-            if (ImGui.Button("force reload DataServiceVipPerks"))
-            {
-                plugin.DataServiceVipPerks.Refresh();
-            }
-            if (ImGui.Button("reset loaded VIP status"))
-            {
-                plugin.localPlayer.IsVip = false;
-                plugin.localPlayer.VipKind = "";
-            }
-            if (ImGui.Button("reset loaded local player staff status"))
-            {
-                plugin.localPlayer.IsStaff = false;
-                plugin.localPlayer.IsStaffHead = false;
-                plugin.localPlayer.StaffRole = string.Empty;
-            }
-        //}
+        var scale = ImGui.GetIO().FontGlobalScale;
+        using var theme = HabitatStyle.PushTheme(scale);
+
+        _ = configuration;
         
+        using (HabitatStyle.BeginPanel("ConfigBody", Vector2.Zero, scale, HabitatStyle.PanelRaised))
+        {
+            ImGui.TextColoredWrapped(HabitatStyle.Text, "Maintenance & Refresh");
+            ImGui.TextColoredWrapped(HabitatStyle.TextMuted, "Lightweight venue tools for refreshing remote data and resetting cached local state.");
+            ImGui.Spacing();
+            HabitatStyle.DrawDivider(scale);
+
+            using (HabitatStyle.BeginPanel("ConfigDataPanel", new Vector2(0, 264f * scale), scale, HabitatStyle.PanelInset, ImGuiWindowFlags.NoScrollbar))
+            {
+                ImGui.TextColored(HabitatStyle.AccentHover, "Data Sources");
+                ImGui.TextColoredWrapped(HabitatStyle.TextMuted, "Refresh the current Supabase-backed lists without changing any plugin behavior.");
+                ImGui.Spacing();
+
+                if (DrawPrimaryButton("Reload VIP Data", new Vector2(-1, 0)))
+                {
+                    plugin.DataServiceVip.Refresh();
+                }
+
+                if (DrawSecondaryButton("Reload Staff Data", new Vector2(-1, 0)))
+                {
+                    plugin.DataServiceStaff.Refresh();
+                }
+
+                if (DrawSecondaryButton("Reload Services Data", new Vector2(-1, 0)))
+                {
+                    plugin.DataServiceServices.Refresh();
+                }
+
+                if (DrawSecondaryButton("Reload VIP Perks", new Vector2(-1, 0)))
+                {
+                    plugin.DataServiceVipPerks.Refresh();
+                }
+            }
+
+            ImGui.Spacing();
+
+            using (HabitatStyle.BeginPanel("ConfigStatePanel", Vector2.Zero, scale, HabitatStyle.PanelInset))
+            {
+                ImGui.TextColored(HabitatStyle.AccentHover, "Local State");
+                ImGui.TextColoredWrapped(HabitatStyle.TextMuted, "Reset cached player-side status values for quick debugging.");
+                ImGui.Spacing();
+
+                if (DrawSecondaryButton("Reset Loaded VIP Status", new Vector2(-1, 0)))
+                {
+                    plugin.localPlayer.IsVip = false;
+                    plugin.localPlayer.VipKind = "";
+                }
+
+                if (DrawSecondaryButton("Reset Local Staff Status", new Vector2(-1, 0)))
+                {
+                    plugin.localPlayer.IsStaff = false;
+                    plugin.localPlayer.IsStaffHead = false;
+                    plugin.localPlayer.StaffRole = string.Empty;
+                }
+                
+            }
+        }
+        
+
+        //}
+
 
         // Can't ref a property, so use a local copy
         /*var configValue = configuration.SomePropertyToBeSavedAndWithADefault;
