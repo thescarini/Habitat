@@ -512,12 +512,12 @@ public class MainWindow : Window, IDisposable
                     {
                         if (ImGui.Button("Request VIP Host"))
                         {
-                            Log.Information($"{Plugin.PluginInterface.Manifest.Name} VIP Host requested");
+                            plugin.SendTell("Hi, I'd like to request a VIP Host.", "Taniri Danolnith", "Raiden");
                         }
                         ImGui.SameLine();
                         if (ImGui.Button("Order a Drink"))
                         {
-                            Log.Information($"{Plugin.PluginInterface.Manifest.Name} VIP Order a Drink");
+                            plugin.SendTell("Hi, I'd like to request a Maid or Butler.", "Taniri Danolnith", "Raiden");
                         }
                     }
                     ImGui.TableSetColumnIndex(1);
@@ -747,7 +747,7 @@ public class MainWindow : Window, IDisposable
         }
         ImGui.EndChild();
         ImGui.AlignTextToFramePadding();
-        ImGui.Text("v0.8.0.3");
+        ImGui.Text("v0.8.0.4");
         ImGui.SameLine();
         if (plugin.IsPluginAvailable("Lifestream"))
         {

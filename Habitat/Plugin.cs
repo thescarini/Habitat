@@ -179,6 +179,7 @@ public sealed class Plugin : IDalamudPlugin
 
     public Plugin()
     {
+        ClientState.Login += OnLogin;
         Log.Information($"loading {PluginInterface.Manifest.Name}");
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
@@ -202,19 +203,7 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
         PluginInterface.UiBuilder.OpenMainUi += ToggleMainUi;
 
-        localPlayer = new LocalPlayer();
-        localPlayer.Name = PlayerState.CharacterName;
-        var playerHomeworldId = PlayerState.HomeWorld.RowId;
-        if (DataManager.GetExcelSheet<Lumina.Excel.Sheets.World>().TryGetRow(playerHomeworldId, out var playerHomeworld))
-        {
-            localPlayer.World = playerHomeworld.Name.ToString();
-            Log.Information($"{PluginInterface.Manifest.Name} local player name and homeworld resolved");
-        }
-        else
-        {
-            Log.Information($"{PluginInterface.Manifest.Name} Error resolving player name and homeworld");
-        }
-        localPlayer.FullName = (localPlayer.Name + "@" + localPlayer.World);
+        
 
         DataServiceVip = new SupabaseDataService<VipList>(
             supabaseProjectUrl,
@@ -284,6 +273,25 @@ public sealed class Plugin : IDalamudPlugin
         DataServiceVip.Dispose();
         DataServiceStaff.Dispose();
         DataServiceVipPerks.Dispose();
+        DataServiceServices.Dispose();
+        ClientState.Login -= OnLogin;
+    }
+
+    private void OnLogin()
+    {
+        localPlayer = new LocalPlayer();
+        localPlayer.Name = PlayerState.CharacterName;
+        var playerHomeworldId = PlayerState.HomeWorld.RowId;
+        if (DataManager.GetExcelSheet<Lumina.Excel.Sheets.World>().TryGetRow(playerHomeworldId, out var playerHomeworld))
+        {
+            localPlayer.World = playerHomeworld.Name.ToString();
+            Log.Information($"{PluginInterface.Manifest.Name} local player name and homeworld resolved");
+        }
+        else
+        {
+            Log.Information($"{PluginInterface.Manifest.Name} Error resolving player name and homeworld");
+        }
+        localPlayer.FullName = (localPlayer.Name + "@" + localPlayer.World);
     }
 
     private void OnCommand(string command, string args)
