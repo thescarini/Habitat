@@ -166,7 +166,7 @@ public class MainWindow : Window, IDisposable
                 {
                     if (ImGui.SmallButton($"Send a Tell##{member.Character_name}_{member.World}"))
                     {
-                        plugin.SendTell("Hi! I like to request your service!", member.Character_name, member.World);
+                        plugin.SendTell("Hi! I'd like to request your service!", member.Character_name, member.World);
                     }
                 }
                 ImGui.TableSetColumnIndex(4);
@@ -505,7 +505,7 @@ public class MainWindow : Window, IDisposable
                         ImGui.Text("Lightless Syncshell Password:");
                         TextfieldToClipboard("sniffinggoodfeet!");
                         ImGui.Spacing();
-                        ImGui.TextColoredWrapped(new Vector4(1, 0, 0, 1), "Habitat is not responsible for any issues that may occur while using the Syncshell.");
+                        ImGui.TextColoredWrapped(HabitatStyle.Danger, "Habitat is not responsible for any issues that may occur while using the Syncshell.");
                     }
                     ImGui.NewLine();
                     if (plugin.localPlayer.IsVip)
@@ -521,7 +521,7 @@ public class MainWindow : Window, IDisposable
                         }
                     }
                     ImGui.TableSetColumnIndex(1);
-                    ImGui.BeginChild("ContentScoll", new System.Numerics.Vector2(0, 0), false);
+                    ImGui.BeginChild("ContentScroll", new System.Numerics.Vector2(0, 0), false);
                     ImGui.Text("Active VIP Perks:");
                     ImGui.Spacing();
 
@@ -532,11 +532,11 @@ public class MainWindow : Window, IDisposable
                         bool allowed = plugin.IsPerkAllowed(perk);
                         if (allowed)
                         {
-                            ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), perk.Perk_name);
+                            ImGui.TextColored(HabitatStyle.Success, perk.Perk_name);
                         }
                         else
                         {
-                            ImGui.TextDisabled(perk.Perk_name);
+                            ImGui.TextColored(HabitatStyle.TextDim, perk.Perk_name);
                         }
                     }
                     ImGui.EndChild();
@@ -566,7 +566,7 @@ public class MainWindow : Window, IDisposable
                         gothikaMenu = 2;
 
                     ImGui.TableSetColumnIndex(1);
-                    ImGui.BeginChild("ContentScoll", new System.Numerics.Vector2(0, 0), false);
+                    ImGui.BeginChild("ContentScroll", new System.Numerics.Vector2(0, 0), false);
                     if (gothikaMenu == 0)
                     {
                         ImGui.TextWrapped("Gothika is a monthly descent into the realm of dark and shadow, curated by Habitat. A sanctuary for those who live and breathe goth, metal, and the deeper shades of alternative music.");
@@ -747,7 +747,7 @@ public class MainWindow : Window, IDisposable
         }
         ImGui.EndChild();
         ImGui.AlignTextToFramePadding();
-        ImGui.Text("v0.8.0.1");
+        ImGui.Text("v0.8.0.3");
         ImGui.SameLine();
         if (plugin.IsPluginAvailable("Lifestream"))
         {
