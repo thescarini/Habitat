@@ -747,7 +747,7 @@ public class MainWindow : Window, IDisposable
         }
         ImGui.EndChild();
         ImGui.AlignTextToFramePadding();
-        ImGui.Text("v0.8.0.4");
+        ImGui.Text("v0.8.0.5");
         ImGui.SameLine();
         if (plugin.IsPluginAvailable("Lifestream"))
         {

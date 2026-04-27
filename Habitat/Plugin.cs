@@ -180,6 +180,9 @@ public sealed class Plugin : IDalamudPlugin
     public Plugin()
     {
         ClientState.Login += OnLogin;
+        if (ClientState.IsLoggedIn)  
+            OnLogin();
+
         Log.Information($"loading {PluginInterface.Manifest.Name}");
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
