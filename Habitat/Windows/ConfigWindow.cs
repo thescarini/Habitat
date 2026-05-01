@@ -55,7 +55,7 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
-        var scale = ImGui.GetIO().FontGlobalScale;
+        /*var scale = ImGui.GetIO().FontGlobalScale;
         using var theme = HabitatStyle.PushTheme(scale);
 
         _ = configuration;
@@ -116,7 +116,7 @@ public class ConfigWindow : Window, IDisposable
                 }
                 
             }
-        }
+        }*/
         
 
         //}

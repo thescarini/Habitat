@@ -26,7 +26,6 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
     [PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
-    [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
 
     private const string CommandName = "/habitat";
 
@@ -43,6 +42,8 @@ public sealed class Plugin : IDalamudPlugin
     private List<VisiblePlayer> cachedVisiblePlayers = new();
     private DateTime lastVisiblePlayersUpdate = DateTime.MinValue;
     private readonly TimeSpan visiblePlayersCacheDuration = TimeSpan.FromSeconds(1);
+    
+    
 
     public unsafe void SendTell(string message, string playerName, string world)
     {
@@ -52,8 +53,6 @@ public sealed class Plugin : IDalamudPlugin
             string.IsNullOrWhiteSpace(world))
             return;
         string command = $"/tell {playerName}@{world} {message}";
-        Log.Information($"CMD: {command}");
-
         UIModule.Instance()->ProcessChatBoxEntry(Utf8String.FromString($"{command}"));
     }
 

@@ -3,6 +3,7 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using Habitat.Models;
+using Habitat.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -372,13 +373,8 @@ public class MainWindow : Window, IDisposable
         float scale = ImGui.GetIO().FontGlobalScale;
         using var theme = HabitatStyle.PushTheme(scale);
         var footerHeight = 25f * scale;
-
-        //ImGui.BeginChild("MainWindow", new Vector2(0, -footerHeight), false, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
         using (HabitatStyle.BeginPanel("MainBody", new Vector2(0, -footerHeight), scale, HabitatStyle.PanelRaised, ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar))
         {
-
-
-
             var habitatLogo = Plugin.TextureProvider.GetFromFile(habitatLogoPath).GetWrapOrDefault();
             if (habitatLogo != null)
             {
@@ -449,7 +445,6 @@ public class MainWindow : Window, IDisposable
                         }
 
                         ImGui.TableSetColumnIndex(1);
-                        //ImGui.BeginChild("ContentScoll", new System.Numerics.Vector2(0, 0), false);
                         using (HabitatStyle.BeginPanel("HabitatPanel", new Vector2(0, 0), scale, HabitatStyle.PanelInset))
                         {
 
@@ -517,8 +512,6 @@ public class MainWindow : Window, IDisposable
                                     ImGui.TextColoredWrapped(HabitatStyle.TextDim, "Looking for a more private space during the night? Chambers are available for booking during opening hours.");
                                     ImGui.TextColored(HabitatStyle.AccentHover, "Prices:");
                                     BulletColoredText(HabitatStyle.AccentHover, HabitatStyle.TextDim, "400.000 Gil / Hour");
-                                    //ImGui.BulletText("400.000 Gil / Hour");
-                                    //ImGui.BulletText("2.000.000 Gil / Full Night");
                                     BulletColoredText(HabitatStyle.AccentHover, HabitatStyle.TextDim, "2.000.000 Gil / Full Night");
                                     if (RightAlignedButton("Rent a Room"))
                                     {
@@ -526,9 +519,7 @@ public class MainWindow : Window, IDisposable
                                     }
                                     HabitatStyle.DrawDivider(scale);
                                     ImGui.TextColored(HabitatStyle.AccentHover, "Notes:");
-                                    //ImGui.BulletText("Chambers are available while supplies last");
                                     BulletColoredText(HabitatStyle.AccentHover, HabitatStyle.TextDim, "Chambers are available while supplies last");
-                                    //ImGui.BulletText("Access is valid for the selected duration only");
                                     BulletColoredText(HabitatStyle.AccentHover, HabitatStyle.TextDim, "Access is valid for the selected duration only");
                                     if (RightAlignedButton("View Chambers"))
                                     {
@@ -557,7 +548,6 @@ public class MainWindow : Window, IDisposable
 
                             }
                         }
-                        //ImGui.EndChild();
                         ImGui.EndTable();
                     }
 
@@ -580,8 +570,6 @@ public class MainWindow : Window, IDisposable
                         ImGui.TableSetColumnIndex(0);
                         using (HabitatStyle.BeginPanel("VIPLeftPanel", new Vector2(0, 0), scale, HabitatStyle.PanelInset, ImGuiWindowFlags.NoScrollbar))
                         {
-
-
                             ImGui.TextColored(HabitatStyle.AccentHover, "Your current VIP Status:");
                             ImGui.SameLine();
                             if (plugin.localPlayer.IsVip)
@@ -601,10 +589,10 @@ public class MainWindow : Window, IDisposable
                                 HabitatStyle.DrawDivider(scale);
                                 ImGui.TextColored(HabitatStyle.AccentHover, "VIP Syncshell");
                                 ImGui.TextColored(HabitatStyle.TextDim, "Lightless ID:");
-                                TextfieldToClipboard("paddleaddicted");
+                                TextfieldToClipboard("unavailable");
                                 ImGui.Spacing();
                                 ImGui.TextColored(HabitatStyle.TextDim, "Lightless Password:");
-                                TextfieldToClipboard("taniribestpaddles2026!");
+                                TextfieldToClipboard("waiting for lightless");
                                 ImGui.Spacing();
                                 ImGui.TextColoredWrapped(HabitatStyle.Danger, "Habitat is not responsible for any issues that may occur while using the Syncshell.");
                             }
@@ -624,33 +612,25 @@ public class MainWindow : Window, IDisposable
                             }
                         }
                         ImGui.TableSetColumnIndex(1);
-                        //ImGui.BeginChild("ContentScroll", new System.Numerics.Vector2(0, 0), false);
                         using (HabitatStyle.BeginPanel("VIPRightPanel", new Vector2(0, 0), scale, HabitatStyle.PanelInset))
                         {
-
-
                             ImGui.TextColored(HabitatStyle.AccentHover, "Active VIP Perks:");
                             ImGui.Spacing();
 
                             foreach (var perk in plugin.DataServiceVipPerks.Data
                                 .OrderByDescending(p => plugin.IsPerkAllowed(p)))
                             {
-                                //ImGui.Bullet();
-                                //ImGui.SameLine();
                                 bool allowed = plugin.IsPerkAllowed(perk);
                                 if (allowed)
                                 {
-                                    //ImGui.TextColored(HabitatStyle.Success, perk.Perk_name);
                                     BulletColoredText(HabitatStyle.Success, HabitatStyle.TextDim, perk.Perk_name);
                                 }
                                 else
                                 {
-                                    //ImGui.TextColored(HabitatStyle.TextDim, perk.Perk_name);
                                     BulletColoredText(HabitatStyle.TextDim, HabitatStyle.TextDim, perk.Perk_name);
                                 }
                             }
                         }
-                        //ImGui.EndChild();
                         ImGui.EndTable();
                     }
                     ImGui.EndTabItem();
@@ -726,11 +706,8 @@ public class MainWindow : Window, IDisposable
                             }
                         }
                         ImGui.TableSetColumnIndex(1);
-                        //ImGui.BeginChild("ContentScroll", new System.Numerics.Vector2(0, 0), false);
                         using (HabitatStyle.BeginPanel("GothikaPanel", new Vector2(0, 0), scale, HabitatStyle.PanelInset))
                         {
-
-
                             if (gothikaMenu == 0)
                             {
                                 ImGui.TextColored(HabitatStyle.AccentHover, "About Gothika");
@@ -842,9 +819,7 @@ public class MainWindow : Window, IDisposable
                                     {
 
                                     }
-
                                 }
-
                                 if (dropboxGothikaService == 1)
                                 {
                                     ImGui.TextColored(HabitatStyle.AccentHover, "Rules:");
@@ -916,7 +891,9 @@ public class MainWindow : Window, IDisposable
             }
         }
         
-        ImGui.TextColored(HabitatStyle.TextDim, "v0.9.1.8");
+        ImGui.TextColored(HabitatStyle.TextDim, "v0.9.2.0");
+
+
         //ImGui.SameLine();
         /*if (plugin.IsPluginAvailable("Lifestream"))
         {
