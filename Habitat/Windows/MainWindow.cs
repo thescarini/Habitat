@@ -589,10 +589,10 @@ public class MainWindow : Window, IDisposable
                                 HabitatStyle.DrawDivider(scale);
                                 ImGui.TextColored(HabitatStyle.AccentHover, "VIP Syncshell");
                                 ImGui.TextColored(HabitatStyle.TextDim, "Lightless ID:");
-                                TextfieldToClipboard("unavailable");
+                                TextfieldToClipboard("HabitatVIP");
                                 ImGui.Spacing();
                                 ImGui.TextColored(HabitatStyle.TextDim, "Lightless Password:");
-                                TextfieldToClipboard("waiting for lightless");
+                                TextfieldToClipboard("Habitat3616");
                                 ImGui.Spacing();
                                 ImGui.TextColoredWrapped(HabitatStyle.Danger, "Habitat is not responsible for any issues that may occur while using the Syncshell.");
                             }
@@ -891,7 +891,7 @@ public class MainWindow : Window, IDisposable
             }
         }
         
-        ImGui.TextColored(HabitatStyle.TextDim, "v0.9.2.0");
+        ImGui.TextColored(HabitatStyle.TextDim, "v0.9.2.1");
 
 
         //ImGui.SameLine();
