@@ -592,7 +592,7 @@ public class MainWindow : Window, IDisposable
                                 TextfieldToClipboard("HabitatVIP");
                                 ImGui.Spacing();
                                 ImGui.TextColored(HabitatStyle.TextDim, "Lightless Password:");
-                                TextfieldToClipboard("Habitat3616");
+                                TextfieldToClipboard("-");
                                 ImGui.Spacing();
                                 ImGui.TextColoredWrapped(HabitatStyle.Danger, "Habitat is not responsible for any issues that may occur while using the Syncshell.");
                             }
@@ -881,7 +881,7 @@ public class MainWindow : Window, IDisposable
                         ImGui.TextColoredWrapped(HabitatStyle.Danger, "By using modded content, you acknowledge that you are doing so at your own risk. Modded environments and third-party tools may be unstable and can lead to crashes, performance issues, or other unintended effects.");
                         ImGui.Spacing();
                         ImGui.Checkbox("I have read the disclaimer", ref merchDisclaimer);
-                        DisabledLinkButtonWithTooltip("Download Venue ModPack", "https://cdn.discordapp.com/attachments/1192513250877776014/1495188103873433762/Habitat_Furniture_Pack_v2.pmp?ex=69ea9bef&is=69e94a6f&hm=8668b5cf47a236e808cd6beaeb09478d52c23e1a997cd78e49c9038771265812&", "You must have read the disclaimer to proceed!", merchDisclaimer);
+                        DisabledLinkButtonWithTooltip("Download Venue ModPack", "https://cdn.discordapp.com/attachments/1192513250877776014/1495188103873433762/Habitat_Furniture_Pack_v2.pmp?ex=69f873af&is=69f7222f&hm=38cdca4466d8a0bd6f1ffb6a23b7016098f6d68611ac6c9da1b5e088d11e0a81&", "You must have read the disclaimer to proceed!", merchDisclaimer);
                         ImGui.SameLine();
                         DisabledLinkButtonWithTooltip("Discover our Free Merch", "https://discord.com/channels/1180989907930468392/1192513250877776014", "You must have read the disclaimer to proceed!", merchDisclaimer);
                     }
@@ -891,7 +891,7 @@ public class MainWindow : Window, IDisposable
             }
         }
         
-        ImGui.TextColored(HabitatStyle.TextDim, "v0.9.2.1");
+        ImGui.TextColored(HabitatStyle.TextDim, "v0.9.2.2");
 
 
         //ImGui.SameLine();
