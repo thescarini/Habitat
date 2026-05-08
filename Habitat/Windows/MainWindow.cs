@@ -592,7 +592,7 @@ public class MainWindow : Window, IDisposable
                                 TextfieldToClipboard("HabitatVIP");
                                 ImGui.Spacing();
                                 ImGui.TextColored(HabitatStyle.TextDim, "Lightless Password:");
-                                TextfieldToClipboard("-");
+                                TextfieldToClipboard("Habitat7845");
                                 ImGui.Spacing();
                                 ImGui.TextColoredWrapped(HabitatStyle.Danger, "Habitat is not responsible for any issues that may occur while using the Syncshell.");
                             }
@@ -891,7 +891,7 @@ public class MainWindow : Window, IDisposable
             }
         }
         
-        ImGui.TextColored(HabitatStyle.TextDim, "v0.9.2.2");
+        ImGui.TextColored(HabitatStyle.TextDim, "v0.9.2.3");
 
 
         //ImGui.SameLine();
