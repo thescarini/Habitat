@@ -483,7 +483,7 @@ public class MainWindow : Window, IDisposable
                                     plugin.UpdateStaffStatus(visiblePlayers);
                                 }
                                 ImGui.TextColored(HabitatStyle.AccentHover, "Staff role");
-                                string[] dropdownItems = { "Venue Owners", "Bartenders", "Photographers", "VIP Hosts", "Dealers", "Receptionists", "Hypers", "Security", "Shout Runners" };
+                                string[] dropdownItems = { "Venue Owners", "Bartenders", "Photographers", "Dealers", "Receptionists", "Hypers", "Security", "Shout Runners" };
                                 Dropdown("", dropdownItems, ref dropboxHabitatSelected);
                                 ImGui.NewLine();
                                 ListStaff(dropdownItems[dropboxHabitatSelected], false);
@@ -589,10 +589,10 @@ public class MainWindow : Window, IDisposable
                                 HabitatStyle.DrawDivider(scale);
                                 ImGui.TextColored(HabitatStyle.AccentHover, "VIP Syncshell");
                                 ImGui.TextColored(HabitatStyle.TextDim, "Lightless ID:");
-                                TextfieldToClipboard("LLS-QSKCF7K5EMUG");
+                                TextfieldToClipboard("HabitatVIP");
                                 ImGui.Spacing();
                                 ImGui.TextColored(HabitatStyle.TextDim, "Lightless Password:");
-                                TextfieldToClipboard("Habitat7845");
+                                TextfieldToClipboard("Habitat1212");
                                 ImGui.Spacing();
                                 ImGui.TextColoredWrapped(HabitatStyle.Danger, "Habitat is not responsible for any issues that may occur while using the Syncshell.");
                             }
@@ -891,7 +891,7 @@ public class MainWindow : Window, IDisposable
             }
         }
         
-        ImGui.TextColored(HabitatStyle.TextDim, "v0.9.2.4");
+        ImGui.TextColored(HabitatStyle.TextDim, "v0.9.2.5");
 
 
         //ImGui.SameLine();

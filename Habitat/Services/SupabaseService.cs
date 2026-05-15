@@ -15,7 +15,7 @@ public class SupabaseDataService<Table> : IDisposable
     private List<Table> cache = new();
     private readonly string[]? selectedColumns;
     private DateTime lastFetch = DateTime.MinValue;
-    private readonly TimeSpan cacheDuration = TimeSpan.FromMinutes(60);
+    private readonly TimeSpan cacheDuration = TimeSpan.FromMinutes(5);
     private Task? currentFetchTask;
     private readonly object fetchLock = new();
 
